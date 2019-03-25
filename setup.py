@@ -1,17 +1,30 @@
-# nose tests require multiprocessing package, see
-# https://groups.google.com/forum/#!msg/nose-users/fnJ-kAUbYHQ/_UsLN786ygcJ
-import multiprocessing
-import sys
+#!/bin/python
+"""Setup file for mtools."""
+
 import platform
 import re
+import sys
 
 # try importing from setuptools, if unavailable use distutils.core
 try:
     from setuptools import setup, find_packages
 
     # test for 2.7-included packages, add to requirements if not available
-    install_requires = ['psutil>=2.0']
-    test_requires = ['nose>=1.0', 'psutil>=2.0', 'pymongo>=2.4']
+    install_requires = ['six', 'python-dateutil==2.7']
+
+    # Additional dependencies from requirements.txt that should be installed
+    # for full mtools feature support. These are optional dependencies to
+    # simplify the default install experience, particularly where a build
+    # toolchain is required.
+    extras_requires = {
+        "all": ['matplotlib==1.4.3', 'numpy==1.14.5', 'pymongo==3.6.1', 'psutil==5.4.2'],
+        "mlaunch": ['pymongo==3.6.1', 'psutil==5.4.2'],
+        "mlogfilter": [],
+        "mloginfo": ['numpy==1.14.5'],
+        "mlogvis": [],
+        "mplotqueries": ['matplotlib==1.4.3', 'numpy==1.14.5'],
+    }
+
     try:
         import argparse
     except ImportError:
@@ -21,14 +34,6 @@ try:
         from collections import OrderedDict
     except ImportError:
         install_requires.append('ordereddict')
-        test_requires.append('ordereddict')
-
-    # add dateutil if not installed already
-    try:
-        import dateutil
-    except ImportError:
-        install_requires.append('python-dateutil==2.2')
-        test_requires.append('python-dateutil==2.2')
 
     packages = find_packages()
     kws = {'install_requires': install_requires}
@@ -38,25 +43,25 @@ except ImportError:
 
     # find_packages not available in distutils, manually define packaging
     packages = ['mtools',
-        'mtools.mlaunch',
-        'mtools.mlogfilter',
-        'mtools.mloginfo',
-        'mtools.mlogvis',
-        'mtools.mplotqueries',
-        'mtools.mgenerate',
-        'mtools.test',
-        'mtools.util',
-        'mtools.mlogfilter.filters',
-        'mtools.mplotqueries.plottypes',
-        'mtools.mloginfo.sections']
+                'mtools.mlaunch',
+                'mtools.mlogfilter',
+                'mtools.mloginfo',
+                'mtools.mlogvis',
+                'mtools.mplotqueries',
+                'mtools.mgenerate',
+                'mtools.test',
+                'mtools.util',
+                'mtools.mlogfilter.filters',
+                'mtools.mplotqueries.plottypes',
+                'mtools.mloginfo.sections']
     kws = {}
 
 # import version from mtools/version.py
 with open('mtools/version.py') as f:
     exec(f.read())
 
-# read README.md for long_description content
-with open('README.md') as f:
+# read README.rst for long_description content
+with open('README.rst') as f:
     long_description = f.read()
 
 if sys.platform == 'darwin' and 'clang' in platform.python_compiler().lower():
@@ -72,7 +77,7 @@ setup(
     name='mtools',
     version=__version__,
     packages=packages,
-    package_data = {
+    package_data={
         'mtools': ['data/log2code.pickle', 'data/index.html'],
     },
     entry_points={
@@ -88,9 +93,19 @@ setup(
     author='Thomas Rueckstiess',
     author_email='thomas@rueckstiess.net',
     url='https://github.com/rueckstiess/mtools',
-    description='Useful scripts to parse and visualize MongoDB log files, launch test environments and reproduce issues.',
+    description=("Useful scripts to parse and visualize MongoDB log files, "
+                 "launch test environments, and reproduce issues."),
     long_description=long_description,
-    tests_require=test_requires,
-    test_suite = 'nose.collector',
+    license='Apache 2.0',
+    classifiers=[
+        'Development Status :: 5 - Production/Stable',
+        'Intended Audience :: Developers',
+        'Topic :: Database',
+        'License :: OSI Approved :: Apache Software License',
+        'Programming Language :: Python :: 2.7',
+        'Programming Language :: Python :: 3.6',
+    ],
+    keywords='MongoDB logs testing',
+    extras_require=extras_requires,
     **kws
 )
